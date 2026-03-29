@@ -69,10 +69,10 @@ Show all configured hookify rules from both the global (`~/.claude/`) and projec
 **Project rules** (.claude/hookify.*.local.md) apply to this project only.
 A project rule with the same name as a global rule overrides it (project wins).
 
-To modify a rule: Edit the .local.md file directly
+To modify a rule: Edit the rule file directly
 To disable a rule: Set `enabled: false` in frontmatter
 To enable a rule: Set `enabled: true` in frontmatter
-To delete a rule: Remove the .local.md file
+To delete a rule: Remove the rule file
 To create a rule: Use `/hookify` command
 
 **Remember**: Changes take effect immediately - no restart needed
