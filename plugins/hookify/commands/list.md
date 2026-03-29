@@ -38,7 +38,7 @@ Show all configured hookify rules from both the global (`~/.claude/`) and projec
 
 | Name | Scope | Enabled | Event | Pattern | File |
 |------|-------|---------|-------|---------|------|
-| warn-dangerous-rm | [global] | ✅ Yes | bash | rm\s+-rf | hookify.dangerous-rm.local.md |
+| warn-dangerous-rm | [global] | ✅ Yes | bash | rm\s+-rf | hookify.dangerous-rm.md |
 | warn-console-log | [project] | ✅ Yes | file | console\.log\( | hookify.console-log.local.md |
 | check-tests | [project] | ❌ No | stop | .* | hookify.require-tests.local.md |
 
@@ -47,7 +47,7 @@ Show all configured hookify rules from both the global (`~/.claude/`) and projec
 
    If a global rule is overridden by a project rule of the same name, show it as:
    ```
-   | warn-dangerous-rm | [global] (overridden) | — | bash | rm\s+-rf | hookify.dangerous-rm.local.md |
+   | warn-dangerous-rm | [global] (overridden) | — | bash | rm\s+-rf | hookify.dangerous-rm.md |
    ```
 
 5. For each active (non-overridden) rule, show a brief preview:

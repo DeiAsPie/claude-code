@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Configuration loader for hookify plugin.
 
-Loads and parses .claude/hookify.*.local.md files.
+Loads and parses hookify rule markdown files from both global
+(~/.claude/hookify.*.md) and project-local (.claude/hookify.*.local.md) locations.
 """
 
 import sys
@@ -202,7 +203,8 @@ def _load_rules_from_dir(
     directory: Path,
     scope: str,
     event: str | None,
-    merged: dict,
+    merged: dict[str, Any],
+    glob_pattern: str = "hookify.*.md",
 ) -> None:
     """Load rules from a directory into a merged dict (name → Rule).
 
@@ -210,17 +212,25 @@ def _load_rules_from_dir(
     and project second to let project rules win.
 
     Args:
-        directory: Directory path to scan for hookify.*.local.md files.
+        directory: Directory path to scan.
         scope: "global" or "project" — set on each loaded Rule.
         event: Optional event filter; rules not matching are skipped.
         merged: Dict to update in-place.
+        glob_pattern: The glob pattern to match rule files.
 
     """
-    files = directory.glob("hookify.*.md")
+    try:
+        # If the directory does not exist or is not accessible, skip loading.
+        if not directory.is_dir():
+            return
+        files = directory.glob(glob_pattern)
+    except (OSError, PermissionError) as e:
+        print(f"Warning: Failed to scan rules in {directory}: {e}", file=sys.stderr)
+        return
 
-    for file_path in files:
+    for file_path in sorted(files):
         try:
-            rule = load_rule_file(file_path, scope=scope)
+            rule = load_rule_file(str(file_path), scope=scope)
             if not rule:
                 continue
 
@@ -248,6 +258,9 @@ def load_rules(event: str | None = None) -> list[Rule]:
     a project rule with the same name as a global rule takes precedence.
     A project rule with enabled=false suppresses the global rule of the same name.
 
+    Global rules are loaded from `~/.claude/hookify.*.md`.
+    Project rules are loaded from `.claude/hookify.*.local.md`.
+
     Args:
         event: Optional event filter ("bash", "file", "stop", etc.)
 
@@ -259,11 +272,23 @@ def load_rules(event: str | None = None) -> list[Rule]:
 
     # Load global rules first (from ~/.claude/)
     global_dir = Path.home() / ".claude"
-    _load_rules_from_dir(global_dir, scope="global", event=event, merged=merged)
+    _load_rules_from_dir(
+        global_dir,
+        scope="global",
+        event=event,
+        merged=merged,
+        glob_pattern="hookify.*.md",
+    )
 
     # Load project rules second (from .claude/ relative to CWD); they overwrite globals by name
     project_dir = Path(".claude")
-    _load_rules_from_dir(project_dir, scope="project", event=event, merged=merged)
+    _load_rules_from_dir(
+        project_dir,
+        scope="project",
+        event=event,
+        merged=merged,
+        glob_pattern="hookify.*.local.md",
+    )
 
     # Return only enabled rules
     return [rule for rule in merged.values() if rule.enabled]
